@@ -71,7 +71,7 @@ function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl">Challan Management</CardTitle>
-            <CardDescription>Sign in to your admin console</CardDescription>
+            <CardDescription>Sign in to your console</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -114,9 +114,7 @@ function LoginPage() {
                 />
                 Remember me
               </label>
-              <a href="#" className="text-xs font-medium text-primary hover:underline">
-                Forgot password?
-              </a>
+          
             </div>
 
             {error && (
@@ -129,10 +127,6 @@ function LoginPage() {
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign in
             </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Demo credentials: <span className="font-medium">admin / admin123</span>
-            </p>
           </form>
         </CardContent>
       </Card>
