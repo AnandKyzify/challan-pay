@@ -1,10 +1,12 @@
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class TimelineEntryOut(BaseModel):
     status: str
     time: str
-    timestamp: str | None = None
+    timestamp: Optional[str] = None
 
 
 class ChallanOut(BaseModel):
@@ -16,7 +18,7 @@ class ChallanOut(BaseModel):
     createdAt: str
     updatedAt: str
     status: str
-    timeline: list[TimelineEntryOut]
+    timeline: List[TimelineEntryOut]
     deleted: bool = False
 
 
@@ -24,8 +26,8 @@ class ChallanCreateRequest(BaseModel):
     challanNumber: str = Field(min_length=1)
     orderId: str = Field(min_length=1)
     amount: float = Field(gt=0)
-    rcNumber: str | None = None
-    initialStatus: str | None = None
+    rcNumber: Optional[str] = None
+    initialStatus: Optional[str] = None
 
 
 class TimelineAppendRequest(BaseModel):
@@ -33,7 +35,7 @@ class TimelineAppendRequest(BaseModel):
 
 
 class BulkDeleteRequest(BaseModel):
-    ids: list[str] = Field(min_length=1)
+    ids: List[str] = Field(min_length=1)
 
 
 class DeletedLogOut(BaseModel):
@@ -52,7 +54,7 @@ class DeletedLogOut(BaseModel):
     deletedTime: str
     challanCreatedAt: str = ""
     restored: bool = False
-    restoredAt: str | None = None
-    restoredByUserId: str | None = None
-    restoredByUserName: str | None = None
-    restoredByUserEmail: str | None = None
+    restoredAt: Optional[str] = None
+    restoredByUserId: Optional[str] = None
+    restoredByUserName: Optional[str] = None
+    restoredByUserEmail: Optional[str] = None

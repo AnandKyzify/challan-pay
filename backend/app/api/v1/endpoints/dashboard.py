@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Query
 
@@ -13,9 +14,9 @@ router = APIRouter()
 async def get_dashboard(
     _user: CurrentUser,
     mode: str = Query(default="lifetime", pattern="^(lifetime|day|range)$"),
-    day: date | None = None,
-    from_date: date | None = Query(default=None, alias="from"),
-    to_date: date | None = Query(default=None, alias="to"),
+    day: Optional[date] = None,
+    from_date: Optional[date] = Query(default=None, alias="from"),
+    to_date: Optional[date] = Query(default=None, alias="to"),
 ) -> DashboardOut:
     return await DashboardService().get_dashboard(
         mode=mode, day=day, date_from=from_date, date_to=to_date

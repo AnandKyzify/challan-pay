@@ -1,3 +1,5 @@
+from typing import List
+
 from app.core.exceptions import bad_request, conflict, not_found
 from app.core.security import hash_password
 from app.models.user import CreateUserRequest, UserListItem
@@ -27,7 +29,7 @@ class UserService:
         )
         return self._to_item(doc)
 
-    async def list_users(self) -> list[UserListItem]:
+    async def list_users(self) -> List[UserListItem]:
         docs = await self.users.list_all()
         return [self._to_item(d) for d in docs]
 

@@ -1,6 +1,6 @@
 import re
 from datetime import date, datetime, timezone
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 
@@ -34,10 +34,10 @@ class ChallanService:
         self,
         include_deleted: bool = False,
         mode: str = "lifetime",
-        day: date | None = None,
-        date_from: date | None = None,
-        date_to: date | None = None,
-    ) -> list[ChallanOut]:
+        day: Optional[date] = None,
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
+    ) -> List[ChallanOut]:
         docs = await self.details.find_all(include_deleted=include_deleted)
         pairs = [(str(d.get("challan_no", "")), str(d.get("order_no", ""))) for d in docs]
         status_map = await self.statuses.find_many_by_pairs(pairs)
@@ -57,10 +57,10 @@ class ChallanService:
     async def list_sent_in_court(
         self,
         mode: str = "lifetime",
-        day: date | None = None,
-        date_from: date | None = None,
-        date_to: date | None = None,
-    ) -> list[ChallanOut]:
+        day: Optional[date] = None,
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
+    ) -> List[ChallanOut]:
         merged = await self.list_challans(
             include_deleted=False,
             mode=mode,
@@ -185,7 +185,7 @@ class ChallanService:
             code = normalize_timeline_status(str(log.get("status_at_delete", "")))
             now = datetime.now(timezone.utc)
             time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-            body: dict[str, Any] = {
+            body: Dict[str, Any] = {
                 "challan_no": cno,
                 "order_no": ono,
                 "amount": float(log.get("amount") or 0),

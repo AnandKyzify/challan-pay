@@ -1,10 +1,10 @@
 """Map between MongoDB field names / legacy statuses and frontend timeline codes."""
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Dict, Optional, Union
 
 # challan_detail.status -> frontend timeline code
-DETAIL_STATUS_TO_TIMELINE: dict[str, str] = {
+DETAIL_STATUS_TO_TIMELINE: Dict[str, str] = {
     "challan_initiated": "PAYMENT_INITIATED",
     "payment_initiated": "PAYMENT_INITIATED",
     "challan_validated": "CHALLAN_VALIDATED",
@@ -14,7 +14,7 @@ DETAIL_STATUS_TO_TIMELINE: dict[str, str] = {
     "challan_added": "PAYMENT_INITIATED",
 }
 
-TIMELINE_TO_DETAIL: dict[str, str] = {
+TIMELINE_TO_DETAIL: Dict[str, str] = {
     "PAYMENT_INITIATED": "challan_initiated",
     "CHALLAN_VALIDATED": "challan_validated",
     "PAYMENT_LINK_GENERATED": "payment_link_generated",
@@ -52,7 +52,7 @@ def is_court_timeline_status(status: str) -> bool:
     return normalize_timeline_status(status) == "CHALLAN_SENT_IN_COURT"
 
 
-def parse_any_datetime(value: Any) -> datetime | None:
+def parse_any_datetime(value: Any) -> Optional[datetime]:
     """Parse MongoDB/string datetimes; returns None if missing or unparseable."""
     if value is None:
         return None
@@ -79,12 +79,12 @@ def parse_any_datetime(value: Any) -> datetime | None:
         return None
 
 
-def parse_detail_time(value: str | datetime | None) -> datetime:
+def parse_detail_time(value: Optional[Union[str, datetime]]) -> datetime:
     """Legacy helper; prefers real DB values, falls back to now only when empty."""
     return parse_any_datetime(value) or datetime.now(timezone.utc)
 
 
-def first_timeline_timestamp(status_doc: dict[str, Any] | None) -> datetime | None:
+def first_timeline_timestamp(status_doc: Optional[Dict[str, Any]]) -> Optional[datetime]:
     raw = (status_doc or {}).get("timeline") or []
     if not raw:
         return None
@@ -92,7 +92,7 @@ def first_timeline_timestamp(status_doc: dict[str, Any] | None) -> datetime | No
 
 
 def resolve_challan_created_at(
-    detail: dict[str, Any], status_doc: dict[str, Any] | None
+    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
 ) -> datetime:
     """When challan was added: detail.time, then first timeline step, then created_at."""
     for key in ("time", "created_at", "createdAt"):
@@ -105,7 +105,7 @@ def resolve_challan_created_at(
     return parse_detail_time(None)
 
 
-def resolve_challan_updated_at(detail: dict[str, Any]) -> datetime:
+def resolve_challan_updated_at(detail: Dict[str, Any]) -> datetime:
     """Last change on challan_detail (not “now” unless the row has no timestamps)."""
     for key in ("updated_at", "updatedAt", "time"):
         dt = parse_any_datetime(detail.get(key))

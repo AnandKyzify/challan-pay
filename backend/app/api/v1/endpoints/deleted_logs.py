@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter
 
 from app.core.dependencies import CurrentUser
@@ -8,8 +10,8 @@ from app.services.deleted_logs_service import DeletedLogsService
 router = APIRouter()
 
 
-@router.get("", response_model=list[DeletedLogOut])
-async def list_deleted_logs(_user: CurrentUser) -> list[DeletedLogOut]:
+@router.get("", response_model=List[DeletedLogOut])
+async def list_deleted_logs(_user: CurrentUser) -> List[DeletedLogOut]:
     return await DeletedLogsService().list_logs()
 
 

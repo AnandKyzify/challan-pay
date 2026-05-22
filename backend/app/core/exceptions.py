@@ -1,8 +1,10 @@
+from typing import Optional
+
 from fastapi import HTTPException, status
 
 
 class AppHTTPException(HTTPException):
-    def __init__(self, status_code: int, message: str, detail: dict | None = None):
+    def __init__(self, status_code: int, message: str, detail: Optional[dict] = None):
         super().__init__(status_code=status_code, detail={"message": message, **(detail or {})})
 
 

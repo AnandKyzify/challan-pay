@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.models.challan import ChallanOut, DeletedLogOut, TimelineEntryOut
 from app.utils.mappings import (
@@ -14,18 +14,18 @@ from app.utils.mappings import (
 )
 
 
-def _pair_key(doc: dict[str, Any]) -> tuple[str, str]:
+def _pair_key(doc: Dict[str, Any]) -> Tuple[str, str]:
     cno = str(doc.get("challan_no") or doc.get("challanNumber") or "")
     ono = str(doc.get("order_no") or doc.get("orderId") or "")
     return cno, ono
 
 
 def _build_timeline(
-    detail: dict[str, Any], status_doc: dict[str, Any] | None
-) -> list[TimelineEntryOut]:
+    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
+) -> List[TimelineEntryOut]:
     raw = (status_doc or {}).get("timeline") or []
     if raw:
-        entries: list[TimelineEntryOut] = []
+        entries: List[TimelineEntryOut] = []
         for item in raw:
             status = normalize_timeline_status(str(item.get("status", "")))
             ts = item.get("timestamp")
@@ -56,7 +56,7 @@ def _build_timeline(
 
 
 def merge_challan(
-    detail: dict[str, Any], status_doc: dict[str, Any] | None
+    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
 ) -> ChallanOut:
     cno, ono = _pair_key(detail)
     timeline = _build_timeline(detail, status_doc)
@@ -84,15 +84,15 @@ def merge_challan(
 
 
 def merge_challans(
-    details: list[dict[str, Any]], status_map: dict[tuple[str, str], dict[str, Any]]
-) -> list[ChallanOut]:
+    details: List[Dict[str, Any]], status_map: Dict[Tuple[str, str], Dict[str, Any]]
+) -> List[ChallanOut]:
     return [
         merge_challan(d, status_map.get(_pair_key(d)))
         for d in details
     ]
 
 
-def deleted_log_to_out(doc: dict[str, Any]) -> DeletedLogOut:
+def deleted_log_to_out(doc: Dict[str, Any]) -> DeletedLogOut:
     deleted_at = parse_any_datetime(doc.get("deleted_at"))
     deleted_at_iso = to_iso_utc(deleted_at) if deleted_at else ""
     restored_at = parse_any_datetime(doc.get("restored_at"))

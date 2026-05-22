@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from bson import ObjectId
 
@@ -9,7 +9,7 @@ class ChallanStatusRepository:
     def __init__(self) -> None:
         self.col = get_db()[COL_CHALLAN_STATUS]
 
-    async def find_by_challan_order(self, challan_no: str, order_no: str) -> dict[str, Any] | None:
+    async def find_by_challan_order(self, challan_no: str, order_no: str) -> Optional[Dict[str, Any]]:
         return await self.col.find_one(
             {
                 "$or": [
@@ -20,8 +20,8 @@ class ChallanStatusRepository:
         )
 
     async def find_many_by_pairs(
-        self, pairs: list[tuple[str, str]]
-    ) -> dict[tuple[str, str], dict[str, Any]]:
+        self, pairs: List[Tuple[str, str]]
+    ) -> Dict[Tuple[str, str], Dict[str, Any]]:
         if not pairs:
             return {}
         or_clauses = []
@@ -30,7 +30,7 @@ class ChallanStatusRepository:
             or_clauses.append({"challan_no": challan_no, "order_no": order_no})
         cursor = self.col.find({"$or": or_clauses})
         docs = await cursor.to_list(length=len(or_clauses) * 2)
-        out: dict[tuple[str, str], dict[str, Any]] = {}
+        out: Dict[Tuple[str, str], Dict[str, Any]] = {}
         for doc in docs:
             cno = doc.get("challanNumber") or doc.get("challan_no") or ""
             ono = doc.get("orderId") or doc.get("order_no") or ""
@@ -38,7 +38,7 @@ class ChallanStatusRepository:
         return out
 
     async def upsert_timeline(
-        self, challan_no: str, order_no: str, timeline: list[dict[str, Any]], latest_status: str
+        self, challan_no: str, order_no: str, timeline: List[Dict[str, Any]], latest_status: str
     ) -> None:
         await self.col.update_one(
             {"challanNumber": challan_no, "orderId": order_no},
@@ -56,7 +56,7 @@ class ChallanStatusRepository:
         )
 
     async def append_timeline_entry(
-        self, challan_no: str, order_no: str, entry: dict[str, Any], latest_status: str
+        self, challan_no: str, order_no: str, entry: Dict[str, Any], latest_status: str
     ) -> None:
         existing = await self.find_by_challan_order(challan_no, order_no)
         timeline = list((existing or {}).get("timeline") or [])
@@ -75,7 +75,7 @@ class ChallanStatusRepository:
         )
         return int(res.deleted_count)
 
-    async def restore_from_snapshot(self, snap: dict[str, Any]) -> None:
+    async def restore_from_snapshot(self, snap: Dict[str, Any]) -> None:
         """Recreate status document exactly as stored at delete time (no extra fields)."""
         doc = {k: v for k, v in snap.items() if k not in ("deleted", "deleted_at")}
         has_camel = bool(doc.get("challanNumber") and doc.get("orderId"))
@@ -84,7 +84,7 @@ class ChallanStatusRepository:
             doc.pop("challan_no", None)
             doc.pop("order_no", None)
         raw_id = snap.get("_id")
-        oid: ObjectId | None = None
+        oid: Optional[ObjectId] = None
         if isinstance(raw_id, ObjectId):
             oid = raw_id
         elif isinstance(raw_id, str) and ObjectId.is_valid(raw_id):
@@ -100,14 +100,14 @@ class ChallanStatusRepository:
         self,
         challan_no: str,
         order_no: str,
-        timeline: list[dict[str, Any]],
-        latest_status: str | None = None,
+        timeline: List[Dict[str, Any]],
+        latest_status: Optional[str] = None,
         *,
         use_camel_keys: bool = True,
     ) -> None:
         """Insert a status row for restore fallback without adding duplicate key styles."""
         if use_camel_keys:
-            doc: dict[str, Any] = {
+            doc: Dict[str, Any] = {
                 "challanNumber": challan_no,
                 "orderId": order_no,
                 "timeline": timeline,

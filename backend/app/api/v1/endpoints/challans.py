@@ -6,6 +6,7 @@ so they are not captured as ObjectIds.
 """
 
 from datetime import date
+from typing import List, Optional
 
 from fastapi import APIRouter, Query
 
@@ -21,15 +22,15 @@ from app.services.challan_service import ChallanService
 router = APIRouter()
 
 
-@router.get("", response_model=list[ChallanOut])
+@router.get("", response_model=List[ChallanOut])
 async def list_challans(
     _user: CurrentUser,
     include_deleted: bool = Query(default=False),
     mode: str = Query(default="lifetime", pattern="^(lifetime|day|range)$"),
-    day: date | None = None,
-    from_date: date | None = Query(default=None, alias="from"),
-    to_date: date | None = Query(default=None, alias="to"),
-) -> list[ChallanOut]:
+    day: Optional[date] = None,
+    from_date: Optional[date] = Query(default=None, alias="from"),
+    to_date: Optional[date] = Query(default=None, alias="to"),
+) -> List[ChallanOut]:
     return await ChallanService().list_challans(
         include_deleted=include_deleted,
         mode=mode,
@@ -39,14 +40,14 @@ async def list_challans(
     )
 
 
-@router.get("/sent-in-court", response_model=list[ChallanOut])
+@router.get("/sent-in-court", response_model=List[ChallanOut])
 async def list_sent_in_court(
     _user: CurrentUser,
     mode: str = Query(default="lifetime", pattern="^(lifetime|day|range)$"),
-    day: date | None = None,
-    from_date: date | None = Query(default=None, alias="from"),
-    to_date: date | None = Query(default=None, alias="to"),
-) -> list[ChallanOut]:
+    day: Optional[date] = None,
+    from_date: Optional[date] = Query(default=None, alias="from"),
+    to_date: Optional[date] = Query(default=None, alias="to"),
+) -> List[ChallanOut]:
     """Challans whose latest timeline status is Sent in Court (smaller payload than full list)."""
     return await ChallanService().list_sent_in_court(
         mode=mode,

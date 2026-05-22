@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter
 
 from app.core.dependencies import AdminUser
@@ -12,8 +14,8 @@ async def create_user(body: CreateUserRequest, _admin: AdminUser) -> UserListIte
     return await UserService().create_user(body)
 
 
-@router.get("", response_model=list[UserListItem])
-async def list_users(_admin: AdminUser) -> list[UserListItem]:
+@router.get("", response_model=List[UserListItem])
+async def list_users(_admin: AdminUser) -> List[UserListItem]:
     return await UserService().list_users()
 
 

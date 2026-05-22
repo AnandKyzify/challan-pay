@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 from datetime import date, datetime, time, timedelta, timezone
+from typing import List, Optional, Tuple
 
 from app.models.challan import ChallanOut
 from app.models.dashboard import (
@@ -24,9 +25,9 @@ class DashboardService:
     async def get_dashboard(
         self,
         mode: str = "lifetime",
-        day: date | None = None,
-        date_from: date | None = None,
-        date_to: date | None = None,
+        day: Optional[date] = None,
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
     ) -> DashboardOut:
         all_challans = await self.challans.list_challans(include_deleted=True)
         scoped = [c for c in all_challans if self._matches_filter(c, mode, day, date_from, date_to)]
@@ -89,7 +90,7 @@ class DashboardService:
             recentChallans=recent_out,
         )
 
-    def _volume_last_14_days(self, active: list[ChallanOut]) -> list[VolumePointOut]:
+    def _volume_last_14_days(self, active: List[ChallanOut]) -> List[VolumePointOut]:
         today = datetime.now(timezone.utc).date()
         counts: defaultdict[str, int] = defaultdict(int)
         courts: defaultdict[str, int] = defaultdict(int)
@@ -99,7 +100,7 @@ class DashboardService:
             if normalize_timeline_status(c.status) == "CHALLAN_SENT_IN_COURT":
                 courts[d] += 1
 
-        out: list[VolumePointOut] = []
+        out: List[VolumePointOut] = []
         for i in range(13, -1, -1):
             d_str = (today - timedelta(days=i)).isoformat()
             out.append(
@@ -107,8 +108,8 @@ class DashboardService:
             )
         return out
 
-    def _monthly_bars(self, active: list[ChallanOut], months: int = 6) -> list[MonthlyBarOut]:
-        keys: list[tuple[int, int]] = []
+    def _monthly_bars(self, active: List[ChallanOut], months: int = 6) -> List[MonthlyBarOut]:
+        keys: List[Tuple[int, int]] = []
         now = datetime.now(timezone.utc)
         y, m = now.year, now.month
         for _ in range(months):
@@ -135,7 +136,7 @@ class DashboardService:
             elif st == "CHALLAN_SENT_IN_COURT":
                 court_[key] += amt
 
-        out: list[MonthlyBarOut] = []
+        out: List[MonthlyBarOut] = []
         for y_k, m_k in keys:
             key = f"{y_k}-{m_k:02d}"
             lbl = datetime(y_k, m_k, 1, tzinfo=timezone.utc).strftime("%b")
@@ -153,10 +154,10 @@ class DashboardService:
     def _deleted_at_window(
         self,
         mode: str,
-        day: date | None,
-        date_from: date | None,
-        date_to: date | None,
-    ) -> tuple[datetime | None, datetime | None]:
+        day: Optional[date],
+        date_from: Optional[date],
+        date_to: Optional[date],
+    ) -> Tuple[Optional[datetime], Optional[datetime]]:
         tz = timezone.utc
         if mode == "lifetime":
             return None, None
@@ -184,9 +185,9 @@ class DashboardService:
         self,
         c: ChallanOut,
         mode: str,
-        day: date | None,
-        date_from: date | None,
-        date_to: date | None,
+        day: Optional[date],
+        date_from: Optional[date],
+        date_to: Optional[date],
     ) -> bool:
         if mode == "lifetime":
             return True

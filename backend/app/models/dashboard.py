@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 
@@ -45,7 +47,7 @@ class RecentChallanOut(BaseModel):
 
 class DashboardOut(BaseModel):
     stats: DashboardStatsOut
-    statusDistribution: list[StatusCountOut]
-    volumeByDay: list[VolumePointOut]
-    monthlyBars: list[MonthlyBarOut]
-    recentChallans: list[RecentChallanOut]
+    statusDistribution: List[StatusCountOut]
+    volumeByDay: List[VolumePointOut]
+    monthlyBars: List[MonthlyBarOut]
+    recentChallans: List[RecentChallanOut]
