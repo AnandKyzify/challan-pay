@@ -65,10 +65,10 @@ import { getApiErrorMessage } from "@/services/api";
 import { challanService } from "@/services/challanService";
 import { LIST_STATUS_FLOW, type Challan } from "@/store/challans";
 import { COURT_STATUS, formatStatusLabel, isCourtStatus } from "@/lib/challanStatus";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatListDateTimeParts } from "@/lib/format";
 
 const PAGE_SIZE = 10;
-const CELL = "px-5 py-4 align-middle text-sm";
+const CELL = "px-2 py-2 align-middle text-center text-sm";
 
 export type ChallansListVariant = "default" | "court";
 
@@ -286,51 +286,47 @@ export function ChallansListView({
           </div>
 
           <div className="overflow-x-auto rounded-md border">
-            <Table className="w-full min-w-[960px] table-fixed">
-              <colgroup>
-                <col style={{ width: "3rem" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "12%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "11%" }} />
-                <col style={{ width: "13%" }} />
-                <col style={{ width: "16%" }} />
-              </colgroup>
+            <Table className="w-full min-w-[1040px] table-auto">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className={`${CELL} w-12`}>
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={(c) => {
-                        const next = new Set(selected);
-                        if (c) paginated.forEach((p) => next.add(p.id));
-                        else paginated.forEach((p) => next.delete(p.id));
-                        setSelected(next);
-                      }}
-                    />
+                  <TableHead className={`${CELL} w-9`}>
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(c) => {
+                          const next = new Set(selected);
+                          if (c) paginated.forEach((p) => next.add(p.id));
+                          else paginated.forEach((p) => next.delete(p.id));
+                          setSelected(next);
+                        }}
+                      />
+                    </div>
                   </TableHead>
                   <TableHead className={CELL}>
-                    <SortBtn
-                      label="Date & Time"
-                      active={sortKey === "createdAt"}
-                      dir={sortDir}
-                      onClick={() => toggleSort("createdAt")}
-                    />
+                    <div className="flex justify-center">
+                      <SortBtn
+                        label="Date & Time"
+                        active={sortKey === "createdAt"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("createdAt")}
+                      />
+                    </div>
                   </TableHead>
                   <TableHead className={CELL}>Challan #</TableHead>
                   <TableHead className={CELL}>RC Number</TableHead>
                   <TableHead className={CELL}>Order ID</TableHead>
-                  <TableHead className={`${CELL} text-right`}>
-                    <SortBtn
-                      label="Amount"
-                      active={sortKey === "amount"}
-                      dir={sortDir}
-                      onClick={() => toggleSort("amount")}
-                    />
+                  <TableHead className={CELL}>
+                    <div className="flex justify-center">
+                      <SortBtn
+                        label="Amount"
+                        active={sortKey === "amount"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("amount")}
+                      />
+                    </div>
                   </TableHead>
-                  <TableHead className={`${CELL} text-center`}>Status</TableHead>
-                  <TableHead className={`${CELL} text-center`}>View details</TableHead>
+                  <TableHead className={`${CELL} whitespace-nowrap`}>Status</TableHead>
+                  <TableHead className={`${CELL} w-[1%] whitespace-nowrap`}>Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -369,41 +365,74 @@ export function ChallansListView({
                 {paginated.map((c) => (
                   <TableRow key={c.id} className={c.deleted ? "opacity-60" : undefined}>
                     <TableCell className={CELL}>
-                      <Checkbox
-                        checked={selected.has(c.id)}
-                        onCheckedChange={(v) => {
-                          const next = new Set(selected);
-                          if (v) next.add(c.id);
-                          else next.delete(c.id);
-                          setSelected(next);
-                        }}
-                      />
+                      <div className="flex justify-center">
+                        <Checkbox
+                          checked={selected.has(c.id)}
+                          onCheckedChange={(v) => {
+                            const next = new Set(selected);
+                            if (v) next.add(c.id);
+                            else next.delete(c.id);
+                            setSelected(next);
+                          }}
+                        />
+                      </div>
                     </TableCell>
                     <TableCell className={`${CELL} whitespace-nowrap`}>
-                      {formatDateTime(c.createdAt)}
+                      {(() => {
+                        const { date, time } = formatListDateTimeParts(c.createdAt);
+                        return (
+                          <div className="mx-auto w-fit text-xs leading-tight tabular-nums">
+                            <div>{date}</div>
+                            <div className="text-muted-foreground">{time}</div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className={CELL}>
-                      <CopyableText value={c.challanNumber} className="font-medium" title="Copy challan number" />
+                      <CopyableText
+                        value={c.challanNumber}
+                        truncate={false}
+                        center
+                        className="font-medium"
+                        title="Copy challan number"
+                      />
                     </TableCell>
                     <TableCell className={CELL}>
-                      <CopyableText value={c.rcNumber} className="font-mono text-[0.8125rem]" title="Copy RC number" />
+                      <CopyableText
+                        value={c.rcNumber}
+                        truncate={false}
+                        center
+                        className="font-mono text-[0.8125rem]"
+                        title="Copy RC number"
+                      />
                     </TableCell>
                     <TableCell className={CELL}>
-                      <CopyableText value={c.orderId} className="font-mono text-[0.8125rem]" title="Copy order ID" />
+                      <CopyableText
+                        value={c.orderId}
+                        truncate={false}
+                        center
+                        className="font-mono text-[0.8125rem]"
+                        title="Copy order ID"
+                      />
                     </TableCell>
-                    <TableCell className={`${CELL} text-right font-medium tabular-nums`}>
+                    <TableCell className={`${CELL} whitespace-nowrap font-medium tabular-nums`}>
                       {formatCurrency(c.amount)}
                     </TableCell>
                     <TableCell className={CELL}>
                       <div className="flex justify-center">
-                        <StatusBadge status={c.status} />
+                        <StatusBadge status={c.status} nowrap />
                       </div>
                     </TableCell>
                     <TableCell className={CELL}>
                       <div className="flex justify-center">
-                        <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => setDetailId(c.id)}>
-                          <Eye className="mr-2 h-4 w-4 shrink-0" />
-                          View details
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 whitespace-nowrap px-2"
+                          onClick={() => setDetailId(c.id)}
+                        >
+                          <Eye className="mr-1.5 h-4 w-4 shrink-0" />
+                          View
                         </Button>
                       </div>
                     </TableCell>

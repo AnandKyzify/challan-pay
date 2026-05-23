@@ -8,10 +8,14 @@ export function CopyableText({
   value,
   className,
   title = "Copy",
+  truncate = true,
+  center = false,
 }: {
   value: string;
   className?: string;
   title?: string;
+  truncate?: boolean;
+  center?: boolean;
 }) {
   const copy = async () => {
     try {
@@ -23,8 +27,14 @@ export function CopyableText({
   };
 
   return (
-    <div className={cn("group/copy flex min-w-0 max-w-full items-center gap-1", className)}>
-      <span className="min-w-0 truncate">{value}</span>
+    <div
+      className={cn(
+        "group/copy flex min-w-0 items-center gap-0.5",
+        center && "justify-center",
+        className,
+      )}
+    >
+      <span className={cn("min-w-0", truncate ? "truncate" : "whitespace-nowrap")}>{value}</span>
       <Button
         type="button"
         variant="ghost"

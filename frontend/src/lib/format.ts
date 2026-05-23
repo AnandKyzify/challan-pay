@@ -28,11 +28,58 @@ export const formatDateTime = (iso: string) => {
   });
 };
 
+/** Narrower date column in tables (date + time on two lines). */
+export function formatListDateTimeParts(iso: string): { date: string; time: string } {
+  const d = parseDbInstant(iso);
+  if (!d) return { date: "—", time: "" };
+  return {
+    date: d.toLocaleDateString("en-IN", {
+      timeZone: DISPLAY_TZ,
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    time: d.toLocaleTimeString("en-IN", {
+      timeZone: DISPLAY_TZ,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
+  };
+}
+
 /** Full date + time from timeline `timestamp` (DB), or fallback label. */
 export const formatTimelineWhen = (timestamp?: string | null, timeLabel?: string) => {
   if (timestamp) return formatDateTime(timestamp);
   return timeLabel?.trim() || "—";
 };
+
+/** Compact date + time rows for timeline (saves horizontal space). */
+export function formatTimelineDateRows(
+  timestamp?: string | null,
+  timeLabel?: string,
+): { date: string; time: string } | null {
+  const d = timestamp ? parseDbInstant(timestamp) : null;
+  if (d) {
+    return {
+      date: d.toLocaleDateString("en-IN", {
+        timeZone: DISPLAY_TZ,
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+      time: d.toLocaleTimeString("en-IN", {
+        timeZone: DISPLAY_TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    };
+  }
+  const label = timeLabel?.trim();
+  if (!label) return null;
+  return { date: label, time: "" };
+}
 
 export const formatDate = (iso: string) => {
   const d = parseDbInstant(iso);
