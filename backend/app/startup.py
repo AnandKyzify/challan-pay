@@ -11,6 +11,8 @@ async def ensure_indexes() -> None:
     await db["challan_detail"].create_index([("deleted", 1), ("time", -1)])
     await db["challan_status"].create_index([("challanNumber", 1), ("orderId", 1)])
     await db["challan_status"].create_index([("challan_no", 1), ("order_no", 1)])
+    await db["challan_status"].create_index([("challan_no", 1), ("time", 1)])
+    await db["challan_status"].create_index([("challanNumber", 1), ("time", 1)])
     await db["challan_deleted_logs"].create_index([("deleted_at", -1)])
     await db[COL_USERS].create_index("username", unique=True)
 

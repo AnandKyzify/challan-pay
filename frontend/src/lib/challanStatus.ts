@@ -17,6 +17,8 @@ const DETAIL_TO_TIMELINE: Record<string, string> = {
   payment_initiated: TIMELINE_STATUS.PAYMENT_INITIATED,
   challan_validated: TIMELINE_STATUS.CHALLAN_VALIDATED,
   payment_link_generated: TIMELINE_STATUS.PAYMENT_LINK_GENERATED,
+  "payment link generated": TIMELINE_STATUS.PAYMENT_LINK_GENERATED,
+  "payment link generated successfully": TIMELINE_STATUS.PAYMENT_LINK_GENERATED,
   paid: TIMELINE_STATUS.PAID,
   challan_sent_in_court: TIMELINE_STATUS.CHALLAN_SENT_IN_COURT,
   challan_added: TIMELINE_STATUS.PAYMENT_INITIATED,

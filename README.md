@@ -21,7 +21,7 @@ copy .env.example .env
 python run.py
 ```
 
-**2. Frontend** (UI on port 5173)
+**2. Frontend** (UI on port 3000 — see `frontend/vite.config.ts`)
 
 ```bash
 cd frontend
@@ -30,7 +30,7 @@ copy .env.example .env
 npm run dev
 ```
 
-Sign in at http://localhost:5173/login (default `admin` / `admin123` after first backend boot).
+Sign in at http://localhost:3000/login (default `admin` / `admin123` after first backend boot).
 
 **API URL (frontend):** set `VITE_API_BASE_URL` in `frontend/.env` (see `frontend/.env.example`). Use `/api` on the server with a reverse proxy so UI and API share one domain and CORS is not needed.
 

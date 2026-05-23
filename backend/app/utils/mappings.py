@@ -1,7 +1,7 @@
 """Map between MongoDB field names / legacy statuses and frontend timeline codes."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 # challan_detail.status -> frontend timeline code
 DETAIL_STATUS_TO_TIMELINE: Dict[str, str] = {
@@ -84,22 +84,35 @@ def parse_detail_time(value: Optional[Union[str, datetime]]) -> datetime:
     return parse_any_datetime(value) or datetime.now(timezone.utc)
 
 
-def first_timeline_timestamp(status_doc: Optional[Dict[str, Any]]) -> Optional[datetime]:
+def event_log_label(doc: Dict[str, Any]) -> str:
+    """Human-readable step label from a single challan_status event row."""
+    return str(doc.get("status") or doc.get("message") or "").strip()
+
+
+def first_timeline_timestamp(
+    status_doc: Optional[Dict[str, Any]] = None,
+    events: Optional[List[Dict[str, Any]]] = None,
+) -> Optional[datetime]:
     raw = (status_doc or {}).get("timeline") or []
-    if not raw:
-        return None
-    return parse_any_datetime(raw[0].get("timestamp"))
+    if raw:
+        return parse_any_datetime(raw[0].get("timestamp")) or parse_any_datetime(raw[0].get("time"))
+    if events:
+        first = events[0]
+        return parse_any_datetime(first.get("time")) or parse_any_datetime(first.get("timestamp"))
+    return None
 
 
 def resolve_challan_created_at(
-    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
+    detail: Dict[str, Any],
+    status_doc: Optional[Dict[str, Any]] = None,
+    events: Optional[List[Dict[str, Any]]] = None,
 ) -> datetime:
     """When challan was added: detail.time, then first timeline step, then created_at."""
     for key in ("time", "created_at", "createdAt"):
         dt = parse_any_datetime(detail.get(key))
         if dt:
             return dt
-    dt = first_timeline_timestamp(status_doc)
+    dt = first_timeline_timestamp(status_doc, events)
     if dt:
         return dt
     return parse_detail_time(None)

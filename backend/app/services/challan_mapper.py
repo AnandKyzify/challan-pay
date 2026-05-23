@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from app.models.challan import ChallanOut, DeletedLogOut, TimelineEntryOut
 from app.utils.mappings import (
     detail_status_to_timeline,
+    event_log_label,
     format_time_only,
-    normalize_timeline_status,
     parse_any_datetime,
     parse_detail_time,
     resolve_challan_created_at,
@@ -21,16 +21,19 @@ def _pair_key(doc: Dict[str, Any]) -> Tuple[str, str]:
 
 
 def _build_timeline(
-    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
+    detail: Dict[str, Any],
+    status_doc: Optional[Dict[str, Any]] = None,
+    events: Optional[List[Dict[str, Any]]] = None,
 ) -> List[TimelineEntryOut]:
+    """CMS timeline array, else Mongo event-log rows (`status`/`message` + `time`)."""
     raw = (status_doc or {}).get("timeline") or []
     if raw:
         entries: List[TimelineEntryOut] = []
         for item in raw:
-            status = normalize_timeline_status(str(item.get("status", "")))
+            status = str(item.get("status", "")).strip()
             ts = item.get("timestamp")
             time_str = str(item.get("time") or "")
-            dt = parse_any_datetime(ts)
+            dt = parse_any_datetime(ts) or parse_any_datetime(time_str)
             if dt and not time_str:
                 time_str = format_time_only(dt)
             ts_iso = to_iso_utc(dt) if dt else (str(ts) if ts else None)
@@ -42,6 +45,24 @@ def _build_timeline(
                 )
             )
         return entries
+
+    if events:
+        entries: List[TimelineEntryOut] = []
+        for doc in events:
+            label = event_log_label(doc)
+            if not label:
+                continue
+            dt = parse_any_datetime(doc.get("time")) or parse_any_datetime(doc.get("timestamp"))
+            time_str = format_time_only(dt) if dt else str(doc.get("time") or "—")
+            entries.append(
+                TimelineEntryOut(
+                    status=label,
+                    time=time_str,
+                    timestamp=to_iso_utc(dt) if dt else None,
+                )
+            )
+        if entries:
+            return entries
 
     detail_status = str(detail.get("status") or "challan_initiated")
     code = detail_status_to_timeline(detail_status)
@@ -56,15 +77,28 @@ def _build_timeline(
 
 
 def merge_challan(
-    detail: Dict[str, Any], status_doc: Optional[Dict[str, Any]]
+    detail: Dict[str, Any],
+    status_doc: Optional[Dict[str, Any]] = None,
+    events: Optional[List[Dict[str, Any]]] = None,
 ) -> ChallanOut:
     cno, ono = _pair_key(detail)
-    timeline = _build_timeline(detail, status_doc)
-    latest = timeline[-1].status if timeline else detail_status_to_timeline(
-        str(detail.get("status", ""))
-    )
-    created = resolve_challan_created_at(detail, status_doc)
+    timeline = _build_timeline(detail, status_doc, events)
+    detail_status_raw = str(detail.get("status") or "").strip()
+    if detail_status_raw:
+        # List + header badge: workflow status from challan_detail (e.g. payment_link_generated).
+        latest = detail_status_to_timeline(detail_status_raw)
+    elif timeline:
+        latest = timeline[-1].status
+    else:
+        latest = detail_status_to_timeline("challan_initiated")
+    created = resolve_challan_created_at(detail, status_doc, events)
     updated = resolve_challan_updated_at(detail)
+    if timeline:
+        last_dt = parse_any_datetime(timeline[-1].timestamp) or parse_any_datetime(
+            timeline[-1].time
+        )
+        if last_dt and last_dt > updated:
+            updated = last_dt
     deleted_at = parse_any_datetime(detail.get("deleted_at"))
     if deleted_at and deleted_at > updated:
         updated = deleted_at
@@ -84,10 +118,17 @@ def merge_challan(
 
 
 def merge_challans(
-    details: List[Dict[str, Any]], status_map: Dict[Tuple[str, str], Dict[str, Any]]
+    details: List[Dict[str, Any]],
+    events_by_challan: Dict[str, List[Dict[str, Any]]],
+    legacy_status_map: Optional[Dict[Tuple[str, str], Dict[str, Any]]] = None,
 ) -> List[ChallanOut]:
+    legacy_status_map = legacy_status_map or {}
     return [
-        merge_challan(d, status_map.get(_pair_key(d)))
+        merge_challan(
+            d,
+            legacy_status_map.get(_pair_key(d)),
+            events_by_challan.get(str(d.get("challan_no") or d.get("challanNumber") or "")),
+        )
         for d in details
     ]
 

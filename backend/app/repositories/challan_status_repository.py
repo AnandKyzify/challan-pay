@@ -9,6 +9,43 @@ class ChallanStatusRepository:
     def __init__(self) -> None:
         self.col = get_db()[COL_CHALLAN_STATUS]
 
+    async def find_events_by_challan_no(self, challan_no: str) -> List[Dict[str, Any]]:
+        """All status rows for one challan (event-log style), oldest first by `time`."""
+        if not challan_no:
+            return []
+        cursor = self.col.find(
+            {
+                "$or": [
+                    {"challan_no": challan_no},
+                    {"challanNumber": challan_no},
+                ]
+            }
+        ).sort("time", 1)
+        return await cursor.to_list(length=5000)
+
+    async def find_many_events_by_challan_nos(
+        self, challan_nos: List[str]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Batch load event-log rows keyed by challan number."""
+        unique = sorted({c for c in challan_nos if c})
+        if not unique:
+            return {}
+        cursor = self.col.find(
+            {
+                "$or": [
+                    {"challan_no": {"$in": unique}},
+                    {"challanNumber": {"$in": unique}},
+                ]
+            }
+        ).sort("time", 1)
+        docs = await cursor.to_list(length=50000)
+        out: Dict[str, List[Dict[str, Any]]] = {c: [] for c in unique}
+        for doc in docs:
+            cno = str(doc.get("challan_no") or doc.get("challanNumber") or "")
+            if cno in out:
+                out[cno].append(doc)
+        return out
+
     async def find_by_challan_order(self, challan_no: str, order_no: str) -> Optional[Dict[str, Any]]:
         return await self.col.find_one(
             {

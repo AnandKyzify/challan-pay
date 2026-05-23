@@ -29,6 +29,6 @@ In dev, Vite proxies `/api` to `http://127.0.0.1:8000` (see `vite.config.ts`).
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Dev server (http://localhost:5173) |
+| `npm run dev` | Dev server (http://localhost:3000) |
 | `npm run build` | Production build |
 | `npm run preview` | Preview production build |

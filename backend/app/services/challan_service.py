@@ -39,9 +39,11 @@ class ChallanService:
         date_to: Optional[date] = None,
     ) -> List[ChallanOut]:
         docs = await self.details.find_all(include_deleted=include_deleted)
-        pairs = [(str(d.get("challan_no", "")), str(d.get("order_no", ""))) for d in docs]
-        status_map = await self.statuses.find_many_by_pairs(pairs)
-        merged = merge_challans(docs, status_map)
+        challan_nos = [
+            str(d.get("challan_no") or d.get("challanNumber") or "") for d in docs
+        ]
+        events_map = await self.statuses.find_many_events_by_challan_nos(challan_nos)
+        merged = merge_challans(docs, events_map)
         return [
             c
             for c in merged
@@ -80,8 +82,11 @@ class ChallanService:
             raise not_found("Challan not found")
         cno = str(detail.get("challan_no", ""))
         ono = str(detail.get("order_no", ""))
+        events = await self.statuses.find_events_by_challan_no(cno)
         status_doc = await self.statuses.find_by_challan_order(cno, ono)
-        return merge_challan(detail, status_doc)
+        if status_doc and status_doc.get("timeline"):
+            return merge_challan(detail, status_doc, events)
+        return merge_challan(detail, None, events)
 
     async def create_challan(self, body: ChallanCreateRequest) -> ChallanOut:
         existing = await self.details.find_by_keys(body.challanNumber, body.orderId)

@@ -52,6 +52,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddChallanDialog } from "@/components/challans/AddChallanDialog";
 import { ExportCsvDialog } from "@/components/challans/ExportCsvDialog";
 import { ChallanDetailsDialog } from "@/components/challans/ChallanDetailsDialog";
+import { CopyableText } from "@/components/challans/CopyableText";
 import { StatusBadge } from "@/components/challans/StatusBadge";
 import {
   DashboardDateFilter,
@@ -381,9 +382,15 @@ export function ChallansListView({
                     <TableCell className={`${CELL} whitespace-nowrap`}>
                       {formatDateTime(c.createdAt)}
                     </TableCell>
-                    <TableCell className={`${CELL} truncate font-medium`}>{c.challanNumber}</TableCell>
-                    <TableCell className={`${CELL} truncate font-mono`}>{c.rcNumber}</TableCell>
-                    <TableCell className={`${CELL} truncate font-mono`}>{c.orderId}</TableCell>
+                    <TableCell className={CELL}>
+                      <CopyableText value={c.challanNumber} className="font-medium" title="Copy challan number" />
+                    </TableCell>
+                    <TableCell className={CELL}>
+                      <CopyableText value={c.rcNumber} className="font-mono text-[0.8125rem]" title="Copy RC number" />
+                    </TableCell>
+                    <TableCell className={CELL}>
+                      <CopyableText value={c.orderId} className="font-mono text-[0.8125rem]" title="Copy order ID" />
+                    </TableCell>
                     <TableCell className={`${CELL} text-right font-medium tabular-nums`}>
                       {formatCurrency(c.amount)}
                     </TableCell>

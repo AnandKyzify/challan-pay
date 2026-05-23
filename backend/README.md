@@ -7,11 +7,11 @@ Async **FastAPI** + **Motor** (MongoDB). Database **`pan`** (configurable via `M
 | Collection | Purpose |
 |------------|---------|
 | `challan_detail` | List + detail card: `challan_no`, `order_no`, `amount`, `time`, `rc_no`, `status`, optional `deleted` / `deleted_at` |
-| `challan_status` | Timeline: `challanNumber` + `orderId` (also mirrored as `challan_no` / `order_no`), `timeline[]` with `status`, `time`, optional `timestamp` |
+| `challan_status` | Status history: one document per step with `challan_no`, `status` or `message`, and `time` (sorted ascending). Legacy CMS rows may use a single doc with `timeline[]`. |
 | `challan_deleted_logs` | Delete audit: who deleted what and when |
 | `cms_users` | Users; first boot seeds admin from env |
 
-Rows are joined by **`(challan_no, order_no)`** ↔ **`(challanNumber, orderId)`**.
+List/detail APIs load steps with **`db.challan_status.find({ challan_no }).sort({ time: 1 })`** (also matches `challanNumber`). Joined to **`challan_detail`** by **`challan_no`**.
 
 ## Configuration
 
@@ -80,6 +80,6 @@ From the repo root, the UI lives in `frontend/`. Copy `frontend/.env.example` to
 VITE_API_BASE_URL=/api
 ```
 
-Run `npm run dev` inside `frontend/` (with this API running on port 8000).
+Run `npm run dev` inside `frontend/` (UI on port 3000, with this API on port 8000).
 
 Non-admin users receive **403** on `/users` routes; only **admin** can add users.

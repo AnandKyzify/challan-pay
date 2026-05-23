@@ -20,15 +20,15 @@ export function StatusTimeline({
         const isLast = index === challan.timeline.length - 1;
         return (
           <li
-            key={`${entry.status}-${entry.timestamp ?? index}`}
-            className={`grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 py-3 ${
+            key={`${entry.status}-${entry.timestamp ?? entry.time}-${index}`}
+            className={`grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-0.5 py-3 ${
               isLast ? "" : "border-b border-border/50"
             }`}
           >
-            <span className="text-sm font-medium leading-snug text-foreground">
+            <span className="break-words text-sm font-medium leading-snug text-foreground">
               {index + 1}. {formatStatusLabel(entry.status)}
             </span>
-            <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">
+            <span className="shrink-0 pt-0.5 text-right text-sm tabular-nums text-muted-foreground">
               {formatTimelineWhen(entry.timestamp, entry.time)}
             </span>
           </li>
