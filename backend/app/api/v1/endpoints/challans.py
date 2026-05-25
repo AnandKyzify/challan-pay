@@ -15,6 +15,7 @@ from app.models.challan import (
     BulkDeleteRequest,
     ChallanCreateRequest,
     ChallanOut,
+    ChallanReceiptOut,
     TimelineAppendRequest,
 )
 from app.services.challan_service import ChallanService
@@ -83,3 +84,9 @@ async def delete_challan(challan_id: str, user: CurrentUser) -> None:
 @router.get("/{challan_id}", response_model=ChallanOut)
 async def get_challan(challan_id: str, _user: CurrentUser) -> ChallanOut:
     return await ChallanService().get_challan(challan_id)
+
+
+@router.get("/{challan_id}/receipt", response_model=ChallanReceiptOut)
+async def get_challan_receipt(challan_id: str, _user: CurrentUser) -> ChallanReceiptOut:
+    pdf_b64 = await ChallanService().get_receipt_pdf(challan_id)
+    return ChallanReceiptOut(receiptBase64=pdf_b64)

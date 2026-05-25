@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/utils/clipboard";
 
 export function CopyableText({
   value,
@@ -18,12 +19,9 @@ export function CopyableText({
   center?: boolean;
 }) {
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success("Copied to clipboard");
-    } catch {
-      toast.error("Could not copy");
-    }
+    const ok = await copyToClipboard(value);
+    if (ok) toast.success("Copied to clipboard");
+    else toast.error("Could not copy");
   };
 
   return (

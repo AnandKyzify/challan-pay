@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowUpDown, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -88,6 +88,11 @@ export function DeletedChallanLogsView() {
   });
   const loadError = isError ? getApiErrorMessage(error) : null;
 
+  const [showLoading, setShowLoading] = useState(true);
+  useEffect(() => {
+    setShowLoading(isLoading);
+  }, [isLoading]);
+
   const restoreMutation = useMutation({
     mutationFn: (logId: string) => deletedChallanLogService.restore(logId),
     onSuccess: () => {
@@ -143,8 +148,15 @@ export function DeletedChallanLogsView() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Deleted challan logs</h1>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={Boolean(!showLoading && isFetching)}
+        >
+          <RefreshCw
+            className={`mr-2 h-4 w-4${!showLoading && isFetching ? " animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -200,7 +212,7 @@ export function DeletedChallanLogsView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {showLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       {Array.from({ length: 9 }).map((__, j) => (

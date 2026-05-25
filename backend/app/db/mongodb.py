@@ -32,5 +32,6 @@ def get_db() -> AsyncIOMotorDatabase:
 # Collection names (MongoDB `pan` database)
 COL_CHALLAN_DETAIL = "challan_detail"
 COL_CHALLAN_STATUS = "challan_status"
+COL_CHALLAN_RECEIPT = "challan_receipt"
 COL_DELETED_LOGS = "challan_deleted_logs"
 COL_USERS = "cms_users"

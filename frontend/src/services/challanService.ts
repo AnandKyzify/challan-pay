@@ -21,6 +21,10 @@ export const challanService = {
     return api.get<Challan>(`/challans/${id}`);
   },
 
+  async getReceipt(id: string): Promise<{ receiptBase64: string }> {
+    return api.get<{ receiptBase64: string }>(`/challans/${id}/receipt`);
+  },
+
   async create(
     input: {
       challanNumber: string;

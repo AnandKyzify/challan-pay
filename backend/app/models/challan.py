@@ -38,6 +38,10 @@ class BulkDeleteRequest(BaseModel):
     ids: List[str] = Field(min_length=1)
 
 
+class ChallanReceiptOut(BaseModel):
+    receiptBase64: str
+
+
 class DeletedLogOut(BaseModel):
     id: str
     challanId: str

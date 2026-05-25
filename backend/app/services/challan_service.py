@@ -11,6 +11,7 @@ from app.models.challan import (
     ChallanOut,
     TimelineAppendRequest,
 )
+from app.repositories.challan_receipt_repository import ChallanReceiptRepository
 from app.repositories.challan_repository import ChallanDetailRepository
 from app.repositories.challan_status_repository import ChallanStatusRepository
 from app.repositories.deleted_log_repository import DeletedLogRepository
@@ -29,6 +30,7 @@ class ChallanService:
         self.details = ChallanDetailRepository()
         self.statuses = ChallanStatusRepository()
         self.deleted_logs = DeletedLogRepository()
+        self.receipts = ChallanReceiptRepository()
 
     async def list_challans(
         self,
@@ -87,6 +89,18 @@ class ChallanService:
         if status_doc and status_doc.get("timeline"):
             return merge_challan(detail, status_doc, events)
         return merge_challan(detail, None, events)
+
+    async def get_receipt_pdf(self, challan_id: str) -> str:
+        challan = await self.get_challan(challan_id)
+        if normalize_timeline_status(challan.status) != "PAID":
+            raise bad_request("Receipt is only available for paid challans")
+        doc = await self.receipts.find_by_challan_number(challan.challanNumber)
+        if not doc:
+            raise not_found("Receipt not found")
+        raw = doc.get("receipt_base64")
+        if not raw or not str(raw).strip():
+            raise not_found("Receipt not found")
+        return str(raw).strip()
 
     async def create_challan(self, body: ChallanCreateRequest) -> ChallanOut:
         existing = await self.details.find_by_keys(body.challanNumber, body.orderId)

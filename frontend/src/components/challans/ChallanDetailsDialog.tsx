@@ -1,14 +1,20 @@
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./StatusBadge";
 import { StatusTimeline } from "./StatusTimeline";
 import { isBrowser } from "@/lib/apiBase";
-import { challanService } from "@/services/challanService";
+import { TIMELINE_STATUS, normalizeTimelineStatus } from "@/lib/challanStatus";
 import { formatCurrency, formatDateTime, relativeTime } from "@/lib/format";
+import { getApiErrorMessage } from "@/services/api";
+import { challanService } from "@/services/challanService";
 
 export function ChallanDetailsDialog({
   challanId,
@@ -25,10 +31,49 @@ export function ChallanDetailsDialog({
     enabled: open && !!challanId && isBrowser,
   });
 
+  const [showLoading, setShowLoading] = useState(true);
+  useEffect(() => {
+    setShowLoading(isLoading);
+  }, [isLoading]);
+
+  const [updatedHint, setUpdatedHint] = useState<string | undefined>();
+  useEffect(() => {
+    if (challan) setUpdatedHint(relativeTime(challan.updatedAt));
+    else setUpdatedHint(undefined);
+  }, [challan?.updatedAt]);
+
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false);
+
+  const isPaid = challan ? normalizeTimelineStatus(challan.status) === TIMELINE_STATUS.PAID : false;
+
+  const handleDownloadReceipt = async () => {
+    if (!challan) return;
+    setDownloadingReceipt(true);
+    try {
+      const { receiptBase64 } = await challanService.getReceipt(challan.id);
+      const binary = atob(receiptBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `receipt_${challan.challanNumber}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err) ?? "Receipt not available");
+    } finally {
+      setDownloadingReceipt(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 p-0 sm:max-w-4xl">
-        {isLoading && !challan ? (
+        {showLoading && !challan ? (
           <div className="space-y-4 p-6">
             <Skeleton className="h-8 w-2/3" />
             <Skeleton className="h-40 w-full" />
@@ -46,6 +91,23 @@ export function ChallanDetailsDialog({
                   </DialogDescription>
                 </div>
                 <div className="flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 pt-0.5">
+                  {isPaid && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      disabled={Boolean(downloadingReceipt)}
+                      onClick={() => void handleDownloadReceipt()}
+                    >
+                      {downloadingReceipt ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      Download Receipt
+                    </Button>
+                  )}
                   <StatusBadge
                     status={challan.status}
                     nowrap={false}
@@ -79,7 +141,7 @@ export function ChallanDetailsDialog({
                   <DetailField
                     label="Last updated"
                     value={formatDateTime(challan.updatedAt)}
-                    hint={relativeTime(challan.updatedAt)}
+                    hint={updatedHint}
                   />
                 </dl>
               </section>

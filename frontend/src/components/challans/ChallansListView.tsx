@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpDown,
@@ -193,6 +193,11 @@ export function ChallansListView({
       : "No challans match your filters.";
   const loadError = isError ? getApiErrorMessage(error) : null;
 
+  const [showLoading, setShowLoading] = useState(true);
+  useEffect(() => {
+    setShowLoading(isLoading);
+  }, [isLoading]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -201,8 +206,15 @@ export function ChallansListView({
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={Boolean(!showLoading && isFetching)}
+          >
+            <RefreshCw
+              className={`h-4 w-4${!showLoading && isFetching ? " animate-spin" : ""}`}
+            />
             <span className="ml-2 hidden sm:inline">Refresh</span>
           </Button>
           <ExportCsvDialog
@@ -330,7 +342,7 @@ export function ChallansListView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && (
+                {showLoading && (
                   <>
                     {Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
@@ -341,7 +353,7 @@ export function ChallansListView({
                     ))}
                   </>
                 )}
-                {!isLoading && loadError && (
+                {!showLoading && loadError && (
                   <TableRow>
                     <TableCell colSpan={8} className="py-16 text-center">
                       <p className="text-sm font-medium text-destructive">{loadError}</p>
@@ -355,14 +367,15 @@ export function ChallansListView({
                     </TableCell>
                   </TableRow>
                 )}
-                {!isLoading && !loadError && paginated.length === 0 && (
+                {!showLoading && !loadError && paginated.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="py-16 text-center text-sm text-muted-foreground">
                       {emptyMessage}
                     </TableCell>
                   </TableRow>
                 )}
-                {paginated.map((c) => (
+                {!showLoading &&
+                  paginated.map((c) => (
                   <TableRow key={c.id} className={c.deleted ? "opacity-60" : undefined}>
                     <TableCell className={CELL}>
                       <div className="flex justify-center">
@@ -437,7 +450,7 @@ export function ChallansListView({
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))}
               </TableBody>
             </Table>
           </div>
