@@ -32,6 +32,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CopyableText } from "@/components/challans/CopyableText";
 import { StatusBadge } from "@/components/challans/StatusBadge";
 import { isBrowser } from "@/lib/apiBase";
 import { getApiErrorMessage } from "@/services/api";
@@ -39,7 +40,7 @@ import { deletedChallanLogService } from "@/services/deletedChallanLogService";
 import { ApiError } from "@/services/api";
 import type { DeletedChallanLog } from "@/store/deletedChallanLogs";
 import { formatStatusLabel } from "@/lib/challanStatus";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatListDateTimeParts } from "@/lib/format";
 
 const PAGE_SIZE = 10;
 const CELL = "px-4 py-3 align-middle text-[0.9375rem] leading-snug";
@@ -182,32 +183,32 @@ export function DeletedChallanLogsView() {
           </div>
 
           <div className="overflow-x-auto">
-            <Table className="table-fixed min-w-[1180px]">
+            <Table className="table-fixed min-w-[1320px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead className={`${CELL} ${HEAD} w-[180px]`}>
+                  <TableHead className={`${CELL} ${HEAD} w-[150px]`}>
                     <Button variant="ghost" size="sm" className="-ml-2 h-8 text-xs font-semibold uppercase tracking-wide" onClick={() => toggleSort("deletedAt")}>
                       Deleted at
                       <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   </TableHead>
-                  <TableHead className={`${CELL} ${HEAD} w-[180px]`}>Challan created</TableHead>
-                  <TableHead className={`${CELL} ${HEAD} w-[140px]`}>
+                  <TableHead className={`${CELL} ${HEAD} w-[150px]`}>Challan created</TableHead>
+                  <TableHead className={`${CELL} ${HEAD} w-[200px]`}>
                     <Button variant="ghost" size="sm" className="-ml-2 h-8 text-xs font-semibold uppercase tracking-wide" onClick={() => toggleSort("challanNumber")}>
                       Challan #
                       <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   </TableHead>
-                  <TableHead className={`${CELL} ${HEAD}`}>Order ID</TableHead>
-                  <TableHead className={`${CELL} ${HEAD}`}>RC Number</TableHead>
+                  <TableHead className={`${CELL} ${HEAD} w-[220px]`}>Order ID</TableHead>
+                  <TableHead className={`${CELL} ${HEAD} w-[130px]`}>RC Number</TableHead>
                   <TableHead className={`${CELL} ${HEAD} w-[100px] text-right`}>
                     <Button variant="ghost" size="sm" className="-mr-2 h-8 text-xs font-semibold uppercase tracking-wide" onClick={() => toggleSort("amount")}>
                       Amount
                       <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   </TableHead>
-                  <TableHead className={`${CELL} ${HEAD} w-[160px] text-center`}>Status at delete</TableHead>
-                  <TableHead className={`${CELL} ${HEAD}`}>Deleted by</TableHead>
+                  <TableHead className={`${CELL} ${HEAD} w-[140px] text-center`}>Status at delete</TableHead>
+                  <TableHead className={`${CELL} ${HEAD} w-[160px]`}>Deleted by</TableHead>
                   <TableHead className={`${CELL} ${HEAD} w-[120px] text-right`}>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -252,25 +253,61 @@ export function DeletedChallanLogsView() {
                           : null;
                     return (
                     <TableRow key={log.id}>
-                      <TableCell className={CELL}>
-                        <div className="font-medium">{formatDateTime(log.deletedAt)}</div>
+                      <TableCell className={`${CELL} whitespace-nowrap`}>
+                        {(() => {
+                          const { date, time } = formatListDateTimeParts(log.deletedAt);
+                          return (
+                            <div className="text-xs leading-tight tabular-nums">
+                              <div className="font-medium">{date}</div>
+                              <div className="text-muted-foreground">{time}</div>
+                            </div>
+                          );
+                        })()}
                       </TableCell>
-                      <TableCell className={CELL}>
-                        <div className="font-medium">
-                          {log.challanCreatedAt ? formatDateTime(log.challanCreatedAt) : "—"}
-                        </div>
+                      <TableCell className={`${CELL} whitespace-nowrap`}>
+                        {log.challanCreatedAt ? (
+                          (() => {
+                            const { date, time } = formatListDateTimeParts(log.challanCreatedAt);
+                            return (
+                              <div className="text-xs leading-tight tabular-nums">
+                                <div className="font-medium">{date}</div>
+                                <div className="text-muted-foreground">{time}</div>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
-                      <TableCell className={`${CELL} font-mono text-[0.8125rem]`}>{log.challanNumber}</TableCell>
-                      <TableCell className={`${CELL} font-mono text-[0.8125rem]`}>{log.orderId}</TableCell>
-                      <TableCell className={CELL}>{log.rcNumber}</TableCell>
+                      <TableCell className={`${CELL} max-w-[200px]`}>
+                        <CopyableText
+                          value={log.challanNumber}
+                          className="font-mono text-[0.8125rem]"
+                          title="Copy challan number"
+                        />
+                      </TableCell>
+                      <TableCell className={`${CELL} max-w-[220px]`}>
+                        <CopyableText
+                          value={log.orderId}
+                          className="font-mono text-[0.8125rem]"
+                          title="Copy order ID"
+                        />
+                      </TableCell>
+                      <TableCell className={`${CELL} max-w-[130px]`}>
+                        <CopyableText
+                          value={log.rcNumber}
+                          className="font-mono text-[0.8125rem]"
+                          title="Copy RC number"
+                        />
+                      </TableCell>
                       <TableCell className={`${CELL} text-right font-medium`}>{formatCurrency(log.amount)}</TableCell>
                       <TableCell className={`${CELL} text-center`}>
                         <StatusBadge status={log.statusAtDelete} />
                       </TableCell>
-                      <TableCell className={CELL}>
-                        <div className="font-medium">{deletedBy}</div>
+                      <TableCell className={`${CELL} max-w-[160px]`}>
+                        <div className="truncate font-medium">{deletedBy}</div>
                         {deletedSub ? (
-                          <div className="text-xs text-muted-foreground">{deletedSub}</div>
+                          <div className="truncate text-xs text-muted-foreground">{deletedSub}</div>
                         ) : null}
                       </TableCell>
                       <TableCell className={`${CELL} text-right`}>
