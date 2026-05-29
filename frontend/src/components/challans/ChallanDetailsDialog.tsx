@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReceiptStatusBadge } from "./ReceiptStatusBadge";
 import { StatusBadge } from "./StatusBadge";
 import { StatusTimeline } from "./StatusTimeline";
 import { isBrowser } from "@/lib/apiBase";
@@ -45,6 +46,7 @@ export function ChallanDetailsDialog({
   const [downloadingReceipt, setDownloadingReceipt] = useState(false);
 
   const isPaid = challan ? normalizeTimelineStatus(challan.status) === TIMELINE_STATUS.PAID : false;
+  const receiptPresent = Boolean(challan?.receiptPresent);
 
   const handleDownloadReceipt = async () => {
     if (!challan) return;
@@ -91,7 +93,8 @@ export function ChallanDetailsDialog({
                   </DialogDescription>
                 </div>
                 <div className="flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 pt-0.5">
-                  {isPaid && (
+                  <ReceiptStatusBadge present={receiptPresent} />
+                  {isPaid && receiptPresent && (
                     <Button
                       type="button"
                       variant="outline"

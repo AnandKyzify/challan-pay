@@ -32,6 +32,17 @@ class ChallanService:
         self.deleted_logs = DeletedLogRepository()
         self.receipts = ChallanReceiptRepository()
 
+    async def _with_receipt_flags(self, challans: List[ChallanOut]) -> List[ChallanOut]:
+        if not challans:
+            return challans
+        present = await self.receipts.find_present_challan_numbers(
+            [c.challanNumber for c in challans]
+        )
+        return [
+            c.model_copy(update={"receiptPresent": c.challanNumber in present})
+            for c in challans
+        ]
+
     async def list_challans(
         self,
         include_deleted: bool = False,
@@ -46,7 +57,7 @@ class ChallanService:
         ]
         events_map = await self.statuses.find_many_events_by_challan_nos(challan_nos)
         merged = merge_challans(docs, events_map)
-        return [
+        filtered = [
             c
             for c in merged
             if matches_created_date(
@@ -57,6 +68,7 @@ class ChallanService:
                 date_to=date_to,
             )
         ]
+        return await self._with_receipt_flags(filtered)
 
     async def list_sent_in_court(
         self,
@@ -87,8 +99,10 @@ class ChallanService:
         events = await self.statuses.find_events_by_challan_no(cno)
         status_doc = await self.statuses.find_by_challan_order(cno, ono)
         if status_doc and status_doc.get("timeline"):
-            return merge_challan(detail, status_doc, events)
-        return merge_challan(detail, None, events)
+            challan = merge_challan(detail, status_doc, events)
+        else:
+            challan = merge_challan(detail, None, events)
+        return (await self._with_receipt_flags([challan]))[0]
 
     async def get_receipt_pdf(self, challan_id: str) -> str:
         challan = await self.get_challan(challan_id)

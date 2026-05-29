@@ -7,18 +7,25 @@ export type ChallanListQuery = {
   to?: string;
 };
 
+function toLocalYmd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function toChallanListQuery(filter: DashboardDateFilterState): ChallanListQuery {
   if (filter.mode === "lifetime") return { mode: "lifetime" };
   if (filter.mode === "day" && filter.day) {
-    return { mode: "day", day: filter.day.toISOString().slice(0, 10) };
+    return { mode: "day", day: toLocalYmd(filter.day) };
   }
   const from = filter.range?.from;
   if (!from) return { mode: "lifetime" };
   const to = filter.range?.to ?? from;
   return {
     mode: "range",
-    from: from.toISOString().slice(0, 10),
-    to: to.toISOString().slice(0, 10),
+    from: toLocalYmd(from),
+    to: toLocalYmd(to),
   };
 }
 

@@ -53,6 +53,7 @@ import { AddChallanDialog } from "@/components/challans/AddChallanDialog";
 import { ExportCsvDialog } from "@/components/challans/ExportCsvDialog";
 import { ChallanDetailsDialog } from "@/components/challans/ChallanDetailsDialog";
 import { CopyableText } from "@/components/challans/CopyableText";
+import { ReceiptStatusBadge } from "@/components/challans/ReceiptStatusBadge";
 import { StatusBadge } from "@/components/challans/StatusBadge";
 import {
   DashboardDateFilter,
@@ -112,7 +113,7 @@ export function ChallansListView({
   const qc = useQueryClient();
   const [dateFilter, setDateFilter] = useState<DashboardDateFilterState>(defaultDateFilter);
   const listQuery = useMemo(() => toChallanListQuery(dateFilter), [dateFilter]);
-
+                          
   const {
     data: challans = [],
     isLoading,
@@ -298,7 +299,7 @@ export function ChallansListView({
           </div>
 
           <div className="overflow-x-auto rounded-md border">
-            <Table className="w-full min-w-[1040px] table-auto">
+            <Table className="w-full min-w-[1140px] table-auto">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
                   <TableHead className={`${CELL} w-9`}>
@@ -338,6 +339,7 @@ export function ChallansListView({
                     </div>
                   </TableHead>
                   <TableHead className={`${CELL} whitespace-nowrap`}>Status</TableHead>
+                  <TableHead className={`${CELL} whitespace-nowrap`}>Receipt</TableHead>
                   <TableHead className={`${CELL} w-[1%] whitespace-nowrap`}>Details</TableHead>
                 </TableRow>
               </TableHeader>
@@ -346,7 +348,7 @@ export function ChallansListView({
                   <>
                     {Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={8}>
+                        <TableCell colSpan={9}>
                           <Skeleton className="h-8 w-full" />
                         </TableCell>
                       </TableRow>
@@ -355,7 +357,7 @@ export function ChallansListView({
                 )}
                 {!showLoading && loadError && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-16 text-center">
+                    <TableCell colSpan={9} className="py-16 text-center">
                       <p className="text-sm font-medium text-destructive">{loadError}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Ensure MongoDB is running and start the API with{" "}
@@ -369,11 +371,11 @@ export function ChallansListView({
                 )}
                 {!showLoading && !loadError && paginated.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-16 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={9} className="py-16 text-center text-sm text-muted-foreground">
                       {emptyMessage}
                     </TableCell>
                   </TableRow>
-                )}
+                )} 
                 {!showLoading &&
                   paginated.map((c) => (
                   <TableRow key={c.id} className={c.deleted ? "opacity-60" : undefined}>
@@ -387,7 +389,7 @@ export function ChallansListView({
                             else next.delete(c.id);
                             setSelected(next);
                           }}
-                        />
+                        /> 
                       </div>
                     </TableCell>
                     <TableCell className={`${CELL} whitespace-nowrap`}>
@@ -434,6 +436,11 @@ export function ChallansListView({
                     <TableCell className={CELL}>
                       <div className="flex justify-center">
                         <StatusBadge status={c.status} nowrap />
+                      </div>
+                    </TableCell>
+                    <TableCell className={CELL}>
+                      <div className="flex justify-center">
+                        <ReceiptStatusBadge present={Boolean(c.receiptPresent)} />
                       </div>
                     </TableCell>
                     <TableCell className={CELL}>

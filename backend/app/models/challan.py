@@ -20,6 +20,7 @@ class ChallanOut(BaseModel):
     status: str
     timeline: List[TimelineEntryOut]
     deleted: bool = False
+    receiptPresent: bool = False
 
 
 class ChallanCreateRequest(BaseModel):

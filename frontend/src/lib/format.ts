@@ -4,12 +4,16 @@ export const formatCurrency = (n: number) =>
 /** Display all DB/API instants in India time (matches challan_status timestamps). */
 const DISPLAY_TZ = "Asia/Kolkata";
 
-/** Parse ISO from API/Mongo; naive strings are treated as UTC, not browser local. */
+/** Parse API/Mongo instants; naive strings are interpreted as IST (legacy DB data). */
 export function parseDbInstant(iso: string): Date | null {
   const raw = iso?.trim();
   if (!raw) return null;
   const hasOffset = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(raw);
-  const normalized = hasOffset ? raw : raw.includes("T") ? `${raw}Z` : raw;
+  const normalized = hasOffset
+    ? raw
+    : raw.includes("T") || raw.includes(" ")
+      ? `${raw.replace(" ", "T")}+05:30`
+      : raw;
   const d = new Date(normalized);
   return Number.isNaN(d.getTime()) ? null : d;
 }

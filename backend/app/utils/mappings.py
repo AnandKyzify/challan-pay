@@ -1,6 +1,8 @@
 """Map between MongoDB field names / legacy statuses and frontend timeline codes."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+IST = timezone(timedelta(hours=5, minutes=30))
+
 from typing import Any, Dict, List, Optional, Union
 
 # challan_detail.status -> frontend timeline code
@@ -58,7 +60,7 @@ def parse_any_datetime(value: Any) -> Optional[datetime]:
         return None
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+            return value.replace(tzinfo=IST)
         return value
     text = str(value).strip()
     if not text:
@@ -66,14 +68,14 @@ def parse_any_datetime(value: Any) -> Optional[datetime]:
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%fZ"):
         try:
             return datetime.strptime(text.replace("Z", ""), fmt.replace("Z", "")).replace(
-                tzinfo=timezone.utc
+                tzinfo=IST
             )
         except ValueError:
             continue
     try:
         dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=IST)
         return dt
     except ValueError:
         return None

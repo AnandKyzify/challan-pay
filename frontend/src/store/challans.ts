@@ -25,6 +25,8 @@ export interface Challan {
   status: string;
   timeline: TimelineEntry[];
   deleted?: boolean;
+  /** True when `challan_receipt` has a PDF for this challan number. */
+  receiptPresent?: boolean;
 }
 
 export { COURT_STATUS, TIMELINE_STATUS };
