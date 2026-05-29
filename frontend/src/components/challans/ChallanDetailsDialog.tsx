@@ -93,7 +93,9 @@ export function ChallanDetailsDialog({
                   </DialogDescription>
                 </div>
                 <div className="flex max-w-[42%] shrink-0 flex-col items-end gap-1.5 pt-0.5">
-                  <ReceiptStatusBadge present={receiptPresent} />
+                  {!receiptPresent && (
+                    <ReceiptStatusBadge present={false} absentLabel="Receipt not present" />
+                  )}
                   {isPaid && receiptPresent && (
                     <Button
                       type="button"

@@ -4,9 +4,13 @@ import { cn } from "@/lib/utils";
 export function ReceiptStatusBadge({
   present,
   className,
+  presentLabel = "Present",
+  absentLabel = "Not present",
 }: {
   present: boolean;
   className?: string;
+  presentLabel?: string;
+  absentLabel?: string;
 }) {
   return (
     <Badge
@@ -19,7 +23,7 @@ export function ReceiptStatusBadge({
         className,
       )}
     >
-      {present ? "Present" : "Not present"}
+      {present ? presentLabel : absentLabel}
     </Badge>
   );
 }
